@@ -55,6 +55,7 @@ namespace Web.Api
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(databaseName: "AspNetCoreApiStarter"));
             //services.AddDbContext<AppDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Default"), b => b.MigrationsAssembly("Web.Api.Infrastructure")));
 
+            services.AddHttpContextAccessor();
             // Register the ConfigurationBuilder instance of AuthSettings
             var authSettings = Configuration.GetSection(nameof(AuthSettings));
             services.Configure<AuthSettings>(authSettings);
