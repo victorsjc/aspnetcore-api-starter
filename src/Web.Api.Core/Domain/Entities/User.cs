@@ -14,6 +14,7 @@ namespace Web.Api.Core.Domain.Entities
         public string UserName { get; private set; } // Required by automapper
         public string Email { get; private set; }
         public string PasswordHash { get; private set; }
+        public List<UserGroup> UsersGroup { get; set; }
 
         private readonly List<RefreshToken> _refreshTokens = new List<RefreshToken>();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();

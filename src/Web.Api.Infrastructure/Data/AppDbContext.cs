@@ -18,6 +18,19 @@ namespace Web.Api.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(ConfigureUser);
+            
+            modelBuilder.Entity<UserGroup>()
+            .HasKey(t => new { t.UserId, t.GroupId });
+
+            modelBuilder.Entity<UserGroup>()
+            .HasOne(ug => ug.User)
+            .WithMany(u => u.UsersGroup)
+            .HasForeignKey(ug => ug.UserId);
+
+            modelBuilder.Entity<UserGroup>()
+              .HasOne(ug => ug.Group)
+              .WithMany(g => g.UsersGroup)
+              .HasForeignKey(ug => ug.GroupId);
         }
 
         public void ConfigureUser(EntityTypeBuilder<User> builder)
@@ -32,6 +45,7 @@ namespace Web.Api.Infrastructure.Data
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Group> Groups { get; set; }
 
         public override int SaveChanges()
         {
