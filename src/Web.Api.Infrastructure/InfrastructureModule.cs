@@ -14,6 +14,7 @@ namespace Web.Api.Infrastructure
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<UserRepository>().As<IUserRepository>().InstancePerLifetimeScope();
+            builder.RegisterType<GroupRepository>().As<IGroupRepository>().InstancePerLifetimeScope();
             builder.RegisterType<JwtFactory>().As<IJwtFactory>().SingleInstance().FindConstructorsWith(new InternalConstructorFinder());
             builder.RegisterType<JwtTokenHandler>().As<IJwtTokenHandler>().SingleInstance().FindConstructorsWith(new InternalConstructorFinder());
             builder.RegisterType<TokenFactory>().As<ITokenFactory>().SingleInstance();
