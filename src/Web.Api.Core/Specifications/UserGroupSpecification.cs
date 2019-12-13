@@ -6,7 +6,7 @@ namespace Web.Api.Core.Specifications
     {
         public UserGroupSpecification(string guid) : base(u => u.guid.ToString()==guid)
         {
-            
+        	
         }
     }
 }

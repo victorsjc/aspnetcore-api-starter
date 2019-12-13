@@ -14,6 +14,7 @@ namespace Web.Api.Infrastructure.Helpers
       public static class JwtClaims
       {
         public const string ApiAccess = "api_access";
+        public const string ApiRoles = "api_roles";
       }
     }
   }

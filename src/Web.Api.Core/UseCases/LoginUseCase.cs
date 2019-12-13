@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using Web.Api.Core.Dto;
 using Web.Api.Core.Dto.UseCaseRequests;
 using Web.Api.Core.Dto.UseCaseResponses;
@@ -13,14 +15,16 @@ namespace Web.Api.Core.UseCases
     public sealed class LoginUseCase : ILoginUseCase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IGroupRepository _groupRepository;
         private readonly IJwtFactory _jwtFactory;
         private readonly ITokenFactory _tokenFactory;
 
-        public LoginUseCase(IUserRepository userRepository, IJwtFactory jwtFactory, ITokenFactory tokenFactory)
+        public LoginUseCase(IUserRepository userRepository, IJwtFactory jwtFactory, ITokenFactory tokenFactory, IGroupRepository groupRepository)
         {
             _userRepository = userRepository;
             _jwtFactory = jwtFactory;
             _tokenFactory = tokenFactory;
+            _groupRepository = groupRepository;
         }
 
         public async Task<bool> Handle(LoginRequest message, IOutputPort<LoginResponse> outputPort)
@@ -38,9 +42,12 @@ namespace Web.Api.Core.UseCases
                         var refreshToken = _tokenFactory.GenerateToken();
                         user.AddRefreshToken(refreshToken, user.Id, message.RemoteIpAddress);
                         //await _userRepository.Update(user);
+                        var usergroups = _groupRepository.GetUserGroups(user.Id);
+                        //obter as roles dos grupos
+                        var userRoles = usergroups != null ? usergroups.Select(g => g.Role).ToList() : new List<string>();
 
                         // generate access token
-                        outputPort.Handle(new LoginResponse(await _jwtFactory.GenerateEncodedToken(user.IdentityId, user.UserName), refreshToken, true));
+                        outputPort.Handle(new LoginResponse(await _jwtFactory.GenerateEncodedToken(user.IdentityId, user.UserName, userRoles), refreshToken, true));
                         return true;
                     }
                 }

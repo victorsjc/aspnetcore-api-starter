@@ -38,6 +38,12 @@ namespace Web.Api.Infrastructure.Data.Repositories
             return new CreateUserResponse(appUser.Id, identityResult.Succeeded, identityResult.Succeeded ? null : identityResult.Errors.Select(e => new Error(e.Code, e.Description)));
         }
 
+        public async Task<User> FindByIdentityId(string identityId)
+        {
+            var user = await GetSingleBySpec(new UserSpecification(identityId));
+            return user;
+        }
+
         public async Task<User> FindByName(string userName)
         {
             var appUser = await _userManager.FindByNameAsync(userName);

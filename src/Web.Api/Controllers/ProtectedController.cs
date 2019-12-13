@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Web.Api.Controllers
 {
-    [Authorize(Policy = "ApiUser")]
+    //[Authorize(Policy = "ApiUser")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProtectedController : ControllerBase
@@ -19,16 +19,18 @@ namespace Web.Api.Controllers
         }
 
         // GET api/protected/home
+        [Authorize(Policy="Administrator")]
         [HttpGet]
         public async Task<IActionResult> Home()
         {
             //var email = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             ClaimsPrincipal currentUser = this.User;
             var username = currentUser.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var roles = currentUser.FindFirst("api_roles").Value;
             //var email = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             //var email = currentUser.FindFirst(c => c.Type == "sub")?.Value;
             var user = await _userManager.FindByNameAsync(username);
-            return Ok(user);
+            return Ok(roles);
         }
     }
 }

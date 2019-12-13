@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Web.Api.Core.Dto.UseCaseRequests;
 using Web.Api.Core.Dto.UseCaseResponses;
@@ -39,7 +40,7 @@ namespace Web.Api.Core.UseCases
 
                 if (user.HasValidRefreshToken(message.RefreshToken))
                 {
-                    var jwtToken = await _jwtFactory.GenerateEncodedToken(user.IdentityId, user.UserName);
+                    var jwtToken = await _jwtFactory.GenerateEncodedToken(user.IdentityId, user.UserName, new List<string>{ "ROLE_ADMINISTRADOR" });
                     var refreshToken = _tokenFactory.GenerateToken();
                     user.RemoveRefreshToken(message.RefreshToken); // delete the token we've exchanged
                     user.AddRefreshToken(refreshToken, user.Id, ""); // add the new one

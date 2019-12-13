@@ -114,10 +114,13 @@ namespace Web.Api
                 };
             });
 
+            services.AddSingleton<IAuthorizationHandler, CustomAuthorizationHandler>();
+
             // api user claim policy
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("ApiUser", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.ApiAccess));
+                options.AddPolicy("Administrator", policy => policy.Requirements.Add(new CustomAuthorizationRequirement("ADMINISTRATOR")));
             });
 
             // add identity

@@ -8,7 +8,9 @@ using Web.Api.Presenters;
 using Web.Api.Serialization;
 using Web.Api.Core.Interfaces.Gateways.Repositories;
 using System.Net;
+using System.Linq;
 using Web.Api.Core.Specifications;
+using Web.Api.Core.Domain;
 
 namespace Web.Api.Controllers
 {
@@ -47,29 +49,46 @@ namespace Web.Api.Controllers
             return _registerUserPresenter.ContentResult;
         }
 
-        [HttpPost("/usergroups")]
+        [HttpPost("usergroups")]
         public async Task<ActionResult> UserGroup([FromBody] Models.Request.CreateUserGroupRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            await _createUserGroupUseCase.Handle(new CreateUserGroupRequest(request.Name, request.Description), _createUserGroupPresenter);
+
+            var members = request.Members.Select(m => m.Id).ToList();
+            await _createUserGroupUseCase.Handle(new CreateUserGroupRequest(request.Name, request.Description, request.Role, members), _createUserGroupPresenter);
             return _createUserGroupPresenter.ContentResult;
         }
 
-        [HttpGet("/usergroups/{id}")]
+        [HttpGet("usergroups/{id}")]
         public async Task<ActionResult> GetUserGroup(string id)
         {
             if (id == null)
             {
                 return BadRequest(ModelState);
             }
-            var entity = await _groupRepository.GetSingleBySpec(new UserGroupSpecification(id));
+            var specification = new UserGroupSpecification(id);
+            var entity = await _groupRepository.GetSingleBySpec(specification);    
             var result = new JsonContentResult();
             result.StatusCode = (int)HttpStatusCode.OK;
             result.Content = JsonSerializer.SerializeObject(entity);
             return result;
         }
+
+        [HttpGet("usergroups/{id}/members")]
+        public async Task<ActionResult> GetMembers(string id)
+        {
+            if (id == null)
+            {
+                return BadRequest(ModelState);
+            }
+            var users = _groupRepository.GetUsers(id);
+            var result = new JsonContentResult();
+            result.StatusCode = (int)HttpStatusCode.OK;
+            result.Content = JsonSerializer.SerializeObject(users);
+            return result;
+        }        
     }
 }
