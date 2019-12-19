@@ -9,7 +9,7 @@ namespace Web.Api.Core.Interfaces.Gateways.Repositories
     public interface IGroupRepository  : IRepository<Group>
     {
     	Task<Group> Create(string name, string description, string role, ICollection<string> userIds);
-    	List<User> GetUsers(string guid);
+    	Task<PagedResult<User>> GetUsers(string guid);
     	List<Group> GetUserGroups(int id);
     }
 }

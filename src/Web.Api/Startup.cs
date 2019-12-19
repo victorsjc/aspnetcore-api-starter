@@ -10,6 +10,7 @@ using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,9 @@ using Web.Api.Infrastructure.Data;
 using Web.Api.Infrastructure.Helpers;
 using Web.Api.Infrastructure.Identity;
 using Web.Api.Models.Settings;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
 
 
 namespace Web.Api
@@ -137,7 +141,12 @@ namespace Web.Api
             identityBuilder = new IdentityBuilder(identityBuilder.UserType, typeof(IdentityRole), identityBuilder.Services);
             identityBuilder.AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Startup>());
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                             .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Startup>())
+                             .AddJsonOptions(options => {
+                                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                                options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                              });
 
             services.AddAutoMapper();
 

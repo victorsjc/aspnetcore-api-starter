@@ -37,12 +37,13 @@ namespace Web.Api.Infrastructure.Data.Repositories
             return repo;
     	}
 
-    	public List<User> GetUsers(string guid)
+    	public async Task<PagedResult<User>> GetUsers(string guid)
     	{
     		var specification = new UserGroupSpecification(guid);
-    		var groupRepo = GetSingleBySpec(specification);
-    		var result = _appDbContext.Users.Where(u => u.UsersGroup.Any(ug => ug.GroupId == groupRepo.Id)).ToList();
-    		return result;
+    		var groupRepo = await GetSingleBySpec(specification);
+    		//var result = await _appDbContext.Users.Where(u => u.UsersGroup.Any(ug => ug.GroupId == groupRepo.Id)).ToListAsync();
+    		PagedResult<User> result = _appDbContext.Users.Where(u => u.UsersGroup.Any(ug => ug.GroupId == groupRepo.Id)).GetPaged<User, User>(_mapper,1, 1);
+            return result;
     	}
 
     	public List<Group> GetUserGroups(int id)

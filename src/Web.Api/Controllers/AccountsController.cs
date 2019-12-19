@@ -84,10 +84,10 @@ namespace Web.Api.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var users = _groupRepository.GetUsers(id);
+            var page = await _groupRepository.GetUsers(id);
             var result = new JsonContentResult();
             result.StatusCode = (int)HttpStatusCode.OK;
-            result.Content = JsonSerializer.SerializeObject(users);
+            result.Content = JsonSerializer.SerializeObject(page);
             return result;
         }        
     }
