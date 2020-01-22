@@ -27,7 +27,7 @@ namespace Web.Api.Infrastructure.Auth
         {
             var identity = GenerateClaimsIdentity(id, userName);
 
-            var claims = new[]
+            /*var claims = new[]
             {
                  new Claim(JwtRegisteredClaimNames.Sub, userName),
                  new Claim(JwtRegisteredClaimNames.Jti, await _jwtOptions.JtiGenerator()),
@@ -35,7 +35,17 @@ namespace Web.Api.Infrastructure.Auth
                  identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol),
                  identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id),
                  new Claim(Helpers.Constants.Strings.JwtClaims.ApiRoles, string.Join( ",", userRoles))
-             };
+             };*/
+
+             var claims = new List<Claim>();
+             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, userName));
+             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, await _jwtOptions.JtiGenerator()));
+             claims.Add(new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(_jwtOptions.IssuedAt).ToString(), ClaimValueTypes.Integer64));
+             claims.Add(identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol));
+             claims.Add(identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id));
+             foreach(var role in userRoles){
+                claims.Add(new Claim(ClaimTypes.Role, role));
+             }
 
             // Create the JWT security token and encode it.
             var jwt = new JwtSecurityToken(

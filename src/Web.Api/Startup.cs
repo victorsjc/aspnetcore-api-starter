@@ -54,6 +54,7 @@ namespace Web.Api
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            services.AddCors();
             //services.AddDbContext<AppIdentityDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Default"), b => b.MigrationsAssembly("Web.Api.Infrastructure")));
             services.AddDbContext<AppIdentityDbContext>(options => options.UseInMemoryDatabase(databaseName: "AspNetCoreApiStarter"));
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(databaseName: "AspNetCoreApiStarter"));
@@ -213,6 +214,10 @@ namespace Web.Api
             });
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseCors(builder => builder.WithOrigins("http://localhost:4200")
+                                     .AllowAnyMethod()
+                                     .AllowAnyHeader()
+                                     .AllowCredentials());
             app.UseSwagger();
             app.UseAuthentication();
             app.UseMvc();

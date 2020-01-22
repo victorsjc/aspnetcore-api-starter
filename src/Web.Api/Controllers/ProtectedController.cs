@@ -21,7 +21,7 @@ namespace Web.Api.Controllers
         }
 
         // GET api/protected/home
-        [Authorize(Policy="Administrator")]
+        [Authorize(Roles="ROLE_ADMINISTRATOR")]
         [HttpGet]
         public async Task<IActionResult> Home()
         {

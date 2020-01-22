@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Stateless;
 using Web.Api.Core.Shared;
+using System.Runtime.Serialization;
 
 namespace Web.Api.Core.Domain.Entities
 {
@@ -17,21 +18,35 @@ namespace Web.Api.Core.Domain.Entities
             Suspend,
             Terminate,
             Approve,
+            Approve_Restriction,
             Reject
         }
         public enum EvaluateState
         {
+        	[EnumMember(Value = "Rascunho")] 
             Draft,
+            [EnumMember(Value = "Finalizada")] 
             Deleted,
+            [EnumMember(Value = "Aguardando Revisao")] 
             Awaiting_Review,
-            Change_Needed,
+            [EnumMember(Value = "Aguardando Ajuste")] 
+            Awaiting_Changes,
+            [EnumMember(Value = "Revisado")]
             Reviewed,
-            Awaiting_Evaluate,
+            [EnumMember(Value = "Aguardando Avaliação")]
+            Awaiting_Evaluation,
+            [EnumMember(Value = "Avaliado")]
+            Evaluated,
+            [EnumMember(Value = "ATA-Aprovada")]
             Approved,
+            [EnumMember(Value = "ATA-Reprovada")]
             Rejected,
+            [EnumMember(Value = "ATA-Pendente")]
+            Waiting_For_Approval,
+            [EnumMember(Value = "Cancelada")]
             Canceled
         }
-        public EvaluateState State => _stateMachine.State;
+        public EvaluateState Status => _stateMachine.State;
         private readonly StateMachine<EvaluateState, FIDTriggers> _stateMachine;
         public string Name { get; }
 
@@ -61,18 +76,19 @@ namespace Web.Api.Core.Domain.Entities
 
             _stateMachine.Configure(EvaluateState.Awaiting_Review)
                 .Permit(FIDTriggers.Cancel, EvaluateState.Canceled)
-                .Permit(FIDTriggers.Request_Changes, EvaluateState.Change_Needed)
+                .Permit(FIDTriggers.Request_Changes, EvaluateState.Awaiting_Changes)
                 .Permit(FIDTriggers.Approve, EvaluateState.Reviewed);
 
-            _stateMachine.Configure(EvaluateState.Change_Needed)
+            _stateMachine.Configure(EvaluateState.Awaiting_Changes)
                 .Permit(FIDTriggers.Publish, EvaluateState.Awaiting_Review);
 
             _stateMachine.Configure(EvaluateState.Reviewed)
-                .Permit(FIDTriggers.Approve, EvaluateState.Awaiting_Evaluate)
+                .Permit(FIDTriggers.Approve, EvaluateState.Awaiting_Evaluation)
                 .Permit(FIDTriggers.Cancel, EvaluateState.Canceled);
 
-            _stateMachine.Configure(EvaluateState.Awaiting_Evaluate)
+            _stateMachine.Configure(EvaluateState.Awaiting_Evaluation)
                 .Permit(FIDTriggers.Approve, EvaluateState.Approved)
+                .Permit(FIDTriggers.Approve_Restriction, EvaluateState.Waiting_For_Approval)
                 .Permit(FIDTriggers.Reject, EvaluateState.Rejected)
                 .Permit(FIDTriggers.Cancel, EvaluateState.Canceled);
         }
