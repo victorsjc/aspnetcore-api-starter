@@ -19,7 +19,9 @@ namespace Web.Api.Core.Domain.Entities
             Terminate,
             Approve,
             Approve_Restriction,
-            Reject
+            Reject,
+            Board,
+            Removed
         }
         public enum EvaluateState
         {
@@ -35,8 +37,10 @@ namespace Web.Api.Core.Domain.Entities
             Reviewed,
             [EnumMember(Value = "Aguardando Avaliação")]
             Awaiting_Evaluation,
-            [EnumMember(Value = "Avaliado")]
-            Evaluated,
+            [EnumMember(Value = "Disponivel para Comitê")]
+            Available_For_Board,
+            [EnumMember(Value = "Aguardando Decisão do Comitê")]
+            Waiting_For_Board,
             [EnumMember(Value = "ATA-Aprovada")]
             Approved,
             [EnumMember(Value = "ATA-Reprovada")]
@@ -46,13 +50,27 @@ namespace Web.Api.Core.Domain.Entities
             [EnumMember(Value = "Cancelada")]
             Canceled
         }
-        public EvaluateState Status => _stateMachine.State;
+        protected EvaluateState _state;
         private readonly StateMachine<EvaluateState, FIDTriggers> _stateMachine;
+        protected EvaluateState _previousState;
         public string Name { get; }
+
+        public EvaluateState FIDState
+        {
+            get
+            {
+                return _state;
+            }
+            set
+            {
+                _previousState = _state;
+                _state = value;
+            }
+        }
 
         public FID(string name)
         {
-        	_stateMachine = new StateMachine<EvaluateState, FIDTriggers>(EvaluateState.Draft);
+        	_stateMachine = new StateMachine<EvaluateState, FIDTriggers>(() => FIDState, s => FIDState = s);
             Name = name;
 
             ConfigureStateMachine();
@@ -62,7 +80,8 @@ namespace Web.Api.Core.Domain.Entities
         public FID(string state, string name)
         {
             var fidState = (EvaluateState) Enum.Parse(typeof(EvaluateState), state);
-            _stateMachine = new StateMachine<EvaluateState, FIDTriggers>(fidState);
+            _state = fidState;
+            _stateMachine = new StateMachine<EvaluateState, FIDTriggers>(() => FIDState, s => FIDState = s);
             Name = name;
 
             ConfigureStateMachine();
@@ -80,13 +99,28 @@ namespace Web.Api.Core.Domain.Entities
                 .Permit(FIDTriggers.Approve, EvaluateState.Reviewed);
 
             _stateMachine.Configure(EvaluateState.Awaiting_Changes)
-                .Permit(FIDTriggers.Publish, EvaluateState.Awaiting_Review);
+                .Permit(FIDTriggers.Publish, _previousState);
 
             _stateMachine.Configure(EvaluateState.Reviewed)
                 .Permit(FIDTriggers.Approve, EvaluateState.Awaiting_Evaluation)
                 .Permit(FIDTriggers.Cancel, EvaluateState.Canceled);
 
             _stateMachine.Configure(EvaluateState.Awaiting_Evaluation)
+                .Permit(FIDTriggers.Request_Changes, EvaluateState.Awaiting_Changes)
+                .Permit(FIDTriggers.Approve, EvaluateState.Approved)
+                .Permit(FIDTriggers.Board, EvaluateState.Available_For_Board)
+                .Permit(FIDTriggers.Approve_Restriction, EvaluateState.Waiting_For_Approval)
+                .Permit(FIDTriggers.Reject, EvaluateState.Rejected)
+                .Permit(FIDTriggers.Cancel, EvaluateState.Canceled);
+
+            _stateMachine.Configure(EvaluateState.Available_For_Board)
+                .Permit(FIDTriggers.Request_Changes, EvaluateState.Awaiting_Changes)
+                .Permit(FIDTriggers.Approve, EvaluateState.Waiting_For_Board)
+                .Permit(FIDTriggers.Reject, EvaluateState.Awaiting_Evaluation)
+                .Permit(FIDTriggers.Cancel, EvaluateState.Canceled);
+
+            _stateMachine.Configure(EvaluateState.Waiting_For_Board)
+                .Permit(FIDTriggers.Removed, EvaluateState.Available_For_Board)
                 .Permit(FIDTriggers.Approve, EvaluateState.Approved)
                 .Permit(FIDTriggers.Approve_Restriction, EvaluateState.Waiting_For_Approval)
                 .Permit(FIDTriggers.Reject, EvaluateState.Rejected)
@@ -120,6 +154,16 @@ namespace Web.Api.Core.Domain.Entities
         public void RequestChanges()
         {
         	_stateMachine.Fire(FIDTriggers.Request_Changes);
+        }
+
+        public void Board()
+        {
+            _stateMachine.Fire(FIDTriggers.Board);   
+        }
+
+        public void Removed()
+        {
+            _stateMachine.Fire(FIDTriggers.Removed);  
         }
 
         public string ToJson()

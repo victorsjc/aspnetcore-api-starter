@@ -39,6 +39,15 @@ namespace Web.Api.Controllers
         public IActionResult FID(ApprovalRequest request)
         {
             FID iniciativa = new FID(request.Status, request.Name);
+            if("Removed" == request.ResolutionType){
+                iniciativa.Removed();
+            }
+            if("Request_Changes" == request.ResolutionType){
+                iniciativa.RequestChanges();
+            }
+            if("Board" == request.ResolutionType){
+                iniciativa.Board();
+            }
             if("Terminate" == request.ResolutionType){
                 iniciativa.Terminate();
             }
